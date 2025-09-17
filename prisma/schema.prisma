@@ -1,0 +1,234 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// Users and Authentication
+model User {
+  id            String    @id @default(cuid())
+  email         String    @unique
+  emailVerified DateTime?
+  name          String?
+  image         String?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  
+  // Expense relationships
+  createdExpenses Expense[] @relation("ExpenseCreator")
+  participations  ExpenseParticipant[]
+  settlements     Settlement[]
+  
+  // Friendship relationships
+  sentFriendRequests     FriendRequest[] @relation("FriendRequestSender")
+  receivedFriendRequests FriendRequest[] @relation("FriendRequestReceiver")
+  
+  // Group relationships
+  groupMemberships GroupMember[]
+  
+  // Authentication (NextAuth.js required)
+  accounts Account[]
+  sessions Session[]
+  
+  @@map("users")
+}
+
+// Expenses
+model Expense {
+  id          String   @id @default(cuid())
+  description String
+  amount      Int      // Amount in cents to avoid floating point issues
+  currency    String   @default("USD")
+  category    String
+  date        DateTime @default(now())
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  deletedAt   DateTime? // Soft delete
+  
+  // Relationships
+  createdBy     String
+  creator       User   @relation("ExpenseCreator", fields: [createdBy], references: [id])
+  participants  ExpenseParticipant[]
+  settlements   Settlement[]
+  
+  // Optional group assignment
+  groupId String?
+  group   Group?  @relation(fields: [groupId], references: [id])
+  
+  // Metadata
+  receiptUrl String? // URL to uploaded receipt image
+  notes      String?
+  
+  @@index([createdBy])
+  @@index([groupId])
+  @@index([createdAt])
+  @@map("expenses")
+}
+
+// Expense Participants (who owes what)
+model ExpenseParticipant {
+  id       String @id @default(cuid())
+  share    Int    // Amount this participant owes in cents
+  status   ParticipantStatus @default(PENDING)
+  
+  // Relationships
+  expenseId String
+  expense   Expense @relation(fields: [expenseId], references: [id], onDelete: Cascade)
+  userId    String
+  user      User    @relation(fields: [userId], references: [id])
+  
+  // Timestamps
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  @@unique([expenseId, userId]) // One participant record per user per expense
+  @@index([userId])
+  @@map("expense_participants")
+}
+
+// Settlement Records
+model Settlement {
+  id            String   @id @default(cuid())
+  amount        Int      // Amount settled in cents
+  paymentMethod String
+  notes         String?
+  status        SettlementStatus @default(PENDING)
+  
+  // Timestamps
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  confirmedAt DateTime?
+  
+  // Relationships
+  expenseId String
+  expense   Expense @relation(fields: [expenseId], references: [id])
+  payerId   String
+  payer     User    @relation(fields: [payerId], references: [id])
+  
+  // Payment proof
+  proofUrl String? // URL to payment proof image
+  
+  @@index([expenseId])
+  @@index([payerId])
+  @@index([status])
+  @@map("settlements")
+}
+
+// Groups for organizing expenses
+model Group {
+  id          String   @id @default(cuid())
+  name        String
+  description String?
+  currency    String   @default("USD")
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  // Relationships
+  members  GroupMember[]
+  expenses Expense[]
+  
+  @@map("groups")
+}
+
+// Group membership
+model GroupMember {
+  id       String @id @default(cuid())
+  role     GroupRole @default(MEMBER)
+  joinedAt DateTime  @default(now())
+  
+  // Relationships
+  groupId String
+  group   Group  @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  userId  String
+  user    User   @relation(fields: [userId], references: [id])
+  
+  @@unique([groupId, userId])
+  @@map("group_members")
+}
+
+// Friend requests and relationships
+model FriendRequest {
+  id        String @id @default(cuid())
+  status    FriendRequestStatus @default(PENDING)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  // Relationships
+  senderId   String
+  sender     User @relation("FriendRequestSender", fields: [senderId], references: [id])
+  receiverId String
+  receiver   User @relation("FriendRequestReceiver", fields: [receiverId], references: [id])
+  
+  @@unique([senderId, receiverId])
+  @@map("friend_requests")
+}
+
+// Enums
+enum ParticipantStatus {
+  PENDING
+  PAID
+  EXEMPT
+}
+
+enum SettlementStatus {
+  PENDING
+  CONFIRMED
+  REJECTED
+}
+
+enum GroupRole {
+  ADMIN
+  MEMBER
+}
+
+enum FriendRequestStatus {
+  PENDING
+  ACCEPTED
+  REJECTED
+}
+
+// NextAuth.js required models
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String? @db.Text
+  access_token      String? @db.Text
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String? @db.Text
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+  @@map("accounts")
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  @@map("sessions")
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+  @@map("verification_tokens")
+}

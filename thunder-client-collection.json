@@ -1,0 +1,213 @@
+{
+  "client": "Thunder Client",
+  "collectionName": "Expense Flow API",
+  "dateExported": "2024-12-19T10:00:00.000Z",
+  "version": "1.1",
+  "folders": [
+    {
+      "id": "auth-folder",
+      "name": "Authentication",
+      "containerId": "",
+      "created": "2024-12-19T10:00:00.000Z",
+      "sortNum": 10000
+    },
+    {
+      "id": "user-folder", 
+      "name": "User Management",
+      "containerId": "",
+      "created": "2024-12-19T10:00:00.000Z",
+      "sortNum": 20000
+    },
+    {
+      "id": "expense-folder",
+      "name": "Expense Management", 
+      "containerId": "",
+      "created": "2024-12-19T10:00:00.000Z",
+      "sortNum": 30000
+    },
+    {
+      "id": "group-folder",
+      "name": "Group Management",
+      "containerId": "",
+      "created": "2024-12-19T10:00:00.000Z", 
+      "sortNum": 40000
+    },
+    {
+      "id": "friend-folder",
+      "name": "Friend Management",
+      "containerId": "",
+      "created": "2024-12-19T10:00:00.000Z",
+      "sortNum": 50000
+    }
+  ],
+  "requests": [
+    {
+      "id": "test-api",
+      "name": "Test API Connection",
+      "url": "http://localhost:3000/api/test",
+      "method": "GET",
+      "sortNum": 5000,
+      "created": "2024-12-19T10:00:00.000Z",
+      "modified": "2024-12-19T10:00:00.000Z",
+      "headers": [],
+      "params": [],
+      "tests": []
+    },
+    {
+      "id": "get-user-profile",
+      "name": "Get User Profile",
+      "url": "http://localhost:3000/api/user/profile", 
+      "method": "GET",
+      "sortNum": 20001,
+      "created": "2024-12-19T10:00:00.000Z",
+      "modified": "2024-12-19T10:00:00.000Z",
+      "headers": [],
+      "params": [],
+      "containerId": "user-folder",
+      "tests": []
+    },
+    {
+      "id": "search-users",
+      "name": "Search Users",
+      "url": "http://localhost:3000/api/user/search",
+      "method": "GET", 
+      "sortNum": 20002,
+      "created": "2024-12-19T10:00:00.000Z",
+      "modified": "2024-12-19T10:00:00.000Z",
+      "headers": [],
+      "params": [
+        {
+          "name": "query",
+          "value": "test",
+          "isPath": false
+        },
+        {
+          "name": "limit", 
+          "value": "10",
+          "isPath": false
+        }
+      ],
+      "containerId": "user-folder",
+      "tests": []
+    },
+    {
+      "id": "create-expense",
+      "name": "Create Expense",
+      "url": "http://localhost:3000/api/expenses",
+      "method": "POST",
+      "sortNum": 30001, 
+      "created": "2024-12-19T10:00:00.000Z",
+      "modified": "2024-12-19T10:00:00.000Z",
+      "headers": [
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        }
+      ],
+      "params": [],
+      "body": {
+        "type": "json",
+        "raw": "{\n  \"amount\": 100.00,\n  \"description\": \"Test dinner expense\",\n  \"category\": \"Food\",\n  \"participants\": [\n    { \"userId\": \"user1\" },\n    { \"userId\": \"user2\" }\n  ],\n  \"splitType\": \"EQUAL\",\n  \"notes\": \"Test expense from Thunder Client\"\n}",
+        "form": []
+      },
+      "containerId": "expense-folder",
+      "tests": []
+    },
+    {
+      "id": "get-expenses",
+      "name": "Get Expenses", 
+      "url": "http://localhost:3000/api/expenses",
+      "method": "GET",
+      "sortNum": 30002,
+      "created": "2024-12-19T10:00:00.000Z",
+      "modified": "2024-12-19T10:00:00.000Z",
+      "headers": [],
+      "params": [
+        {
+          "name": "limit",
+          "value": "10", 
+          "isPath": false
+        },
+        {
+          "name": "offset",
+          "value": "0",
+          "isPath": false
+        }
+      ],
+      "containerId": "expense-folder",
+      "tests": []
+    },
+    {
+      "id": "create-group",
+      "name": "Create Group",
+      "url": "http://localhost:3000/api/groups",
+      "method": "POST",
+      "sortNum": 40001,
+      "created": "2024-12-19T10:00:00.000Z", 
+      "modified": "2024-12-19T10:00:00.000Z",
+      "headers": [
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        }
+      ],
+      "params": [],
+      "body": {
+        "type": "json", 
+        "raw": "{\n  \"name\": \"Test Group\",\n  \"description\": \"A test group for expenses\",\n  \"members\": []\n}",
+        "form": []
+      },
+      "containerId": "group-folder",
+      "tests": []
+    },
+    {
+      "id": "get-groups",
+      "name": "Get Groups",
+      "url": "http://localhost:3000/api/groups",
+      "method": "GET",
+      "sortNum": 40002,
+      "created": "2024-12-19T10:00:00.000Z",
+      "modified": "2024-12-19T10:00:00.000Z", 
+      "headers": [],
+      "params": [],
+      "containerId": "group-folder",
+      "tests": []
+    },
+    {
+      "id": "get-friends",
+      "name": "Get Friends",
+      "url": "http://localhost:3000/api/friends",
+      "method": "GET",
+      "sortNum": 50001,
+      "created": "2024-12-19T10:00:00.000Z",
+      "modified": "2024-12-19T10:00:00.000Z",
+      "headers": [],
+      "params": [],
+      "containerId": "friend-folder", 
+      "tests": []
+    },
+    {
+      "id": "send-friend-request",
+      "name": "Send Friend Request",
+      "url": "http://localhost:3000/api/friends/requests",
+      "method": "POST",
+      "sortNum": 50002,
+      "created": "2024-12-19T10:00:00.000Z",
+      "modified": "2024-12-19T10:00:00.000Z",
+      "headers": [
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        }
+      ],
+      "params": [],
+      "body": {
+        "type": "json",
+        "raw": "{\n  \"friendId\": \"user-id-here\"\n}",
+        "form": []
+      },
+      "containerId": "friend-folder",
+      "tests": []
+    }
+  ]
+}
