@@ -77,18 +77,21 @@ model ExpenseParticipant {
   share    Int    // Amount this participant owes in cents
   status   ParticipantStatus @default(PENDING)
   
+  // Participant can be either a registered user or custom name
+  userId    String?  // Optional for custom participants
+  user      User?    @relation(fields: [userId], references: [id])
+  customName String? // For non-registered participants
+  
   // Relationships
   expenseId String
   expense   Expense @relation(fields: [expenseId], references: [id], onDelete: Cascade)
-  userId    String
-  user      User    @relation(fields: [userId], references: [id])
   
   // Timestamps
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
   
-  @@unique([expenseId, userId]) // One participant record per user per expense
   @@index([userId])
+  @@index([expenseId])
   @@map("expense_participants")
 }
 

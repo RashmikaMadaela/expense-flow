@@ -12,7 +12,7 @@ import type { Session } from 'next-auth';
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   const authResult = await requireAuth();
   
@@ -24,9 +24,10 @@ export async function GET(
   const userId = getUserId(session);
   
   try {
+    const { id } = await params;
     const group = await prisma.group.findFirst({
       where: {
-        id: params.id,
+        id: id,
         members: {
           some: { userId },
         },
@@ -78,7 +79,7 @@ export async function GET(
 
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   const authResult = await requireAuth();
   
@@ -97,10 +98,11 @@ export async function PUT(
   if (error) return error;
   
   try {
+    const { id } = await params;
     // Check if user is admin of the group
     const membership = await prisma.groupMember.findFirst({
       where: {
-        groupId: params.id,
+        groupId: id,
         userId,
         role: 'ADMIN',
       },
@@ -111,7 +113,7 @@ export async function PUT(
     }
 
     const updatedGroup = await prisma.group.update({
-      where: { id: params.id },
+      where: { id: id },
       data: {
         ...(updateData.name && { name: updateData.name }),
         ...(updateData.description !== undefined && { description: updateData.description }),
@@ -142,7 +144,7 @@ export async function PUT(
 
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   const authResult = await requireAuth();
   
@@ -154,10 +156,11 @@ export async function DELETE(
   const userId = getUserId(session);
   
   try {
+    const { id } = await params;
     // Check if user is admin of the group
     const membership = await prisma.groupMember.findFirst({
       where: {
-        groupId: params.id,
+        groupId: id,
         userId,
         role: 'ADMIN',
       },
@@ -169,7 +172,7 @@ export async function DELETE(
 
     // Check if group has expenses
     const expenseCount = await prisma.expense.count({
-      where: { groupId: params.id },
+      where: { groupId: id },
     });
 
     if (expenseCount > 0) {
@@ -178,7 +181,7 @@ export async function DELETE(
 
     // Delete the group (cascade will handle members)
     await prisma.group.delete({
-      where: { id: params.id },
+      where: { id: id },
     });
 
     return createApiResponse(null, 'Group deleted successfully');

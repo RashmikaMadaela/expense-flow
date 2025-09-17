@@ -10,7 +10,7 @@ import type { Session } from 'next-auth';
 
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string; userId: string } }
+  { params }: { params: Promise<{ id: string; userId: string }> }
 ) {
   const authResult = await requireAuth();
   
@@ -22,10 +22,12 @@ export async function DELETE(
   const currentUserId = getUserId(session);
   
   try {
+    const { id, userId } = await params;
+    
     // Check if current user is admin of the group or removing themselves
     const currentUserMembership = await prisma.groupMember.findFirst({
       where: {
-        groupId: params.id,
+        groupId: id,
         userId: currentUserId,
       },
     });
@@ -35,15 +37,15 @@ export async function DELETE(
     }
 
     // Check if trying to remove someone else (requires admin)
-    if (params.userId !== currentUserId && currentUserMembership.role !== 'ADMIN') {
+    if (userId !== currentUserId && currentUserMembership.role !== 'ADMIN') {
       return createApiError('Only admins can remove other members', 403);
     }
 
     // Check if the member to be removed exists
     const memberToRemove = await prisma.groupMember.findFirst({
       where: {
-        groupId: params.id,
-        userId: params.userId,
+        groupId: id,
+        userId: userId,
       },
     });
 
@@ -55,7 +57,7 @@ export async function DELETE(
     if (memberToRemove.role === 'ADMIN') {
       const adminCount = await prisma.groupMember.count({
         where: {
-          groupId: params.id,
+          groupId: id,
           role: 'ADMIN',
         },
       });
@@ -68,10 +70,10 @@ export async function DELETE(
     // Check if member has unsettled expenses in the group
     const unsettledExpenses = await prisma.expenseParticipant.count({
       where: {
-        userId: params.userId,
+        userId: userId,
         status: 'PENDING',
         expense: {
-          groupId: params.id,
+          groupId: id,
         },
       },
     });
@@ -84,8 +86,8 @@ export async function DELETE(
     await prisma.groupMember.delete({
       where: {
         groupId_userId: {
-          groupId: params.id,
-          userId: params.userId,
+          groupId: id,
+          userId: userId,
         },
       },
     });

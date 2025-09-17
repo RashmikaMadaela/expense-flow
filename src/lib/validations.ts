@@ -21,9 +21,12 @@ export const CreateExpenseSchema = z.object({
   description: z.string().min(1, 'Description is required').max(200, 'Description too long'),
   groupId: z.string().uuid('Invalid group ID').optional(),
   participants: z.array(z.object({
-    userId: z.string().uuid('Invalid user ID'),
+    userId: z.string().uuid('Invalid user ID').optional(),
+    customName: z.string().min(1, 'Custom name is required').max(100, 'Name too long').optional(),
     amount: z.number().positive('Participant amount must be positive').optional(),
-  })).min(1, 'At least one participant is required'),
+  }).refine(data => data.userId || data.customName, {
+    message: 'Either userId or customName must be provided',
+  })).optional(), // Made optional for personal expenses
   splitType: z.enum(['EQUAL', 'EXACT', 'PERCENTAGE']).default('EQUAL'),
   category: z.string().max(50, 'Category too long').optional(),
   notes: z.string().max(500, 'Notes too long').optional(),
@@ -35,8 +38,11 @@ export const UpdateExpenseSchema = z.object({
   category: z.string().max(50, 'Category too long').optional(),
   notes: z.string().max(500, 'Notes too long').optional(),
   participants: z.array(z.object({
-    userId: z.string().uuid('Invalid user ID'),
+    userId: z.string().uuid('Invalid user ID').optional(),
+    customName: z.string().min(1, 'Custom name is required').max(100, 'Name too long').optional(),
     amount: z.number().positive('Participant amount must be positive').optional(),
+  }).refine(data => data.userId || data.customName, {
+    message: 'Either userId or customName must be provided',
   })).optional(),
 });
 

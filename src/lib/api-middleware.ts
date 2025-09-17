@@ -85,13 +85,13 @@ export async function validateRequestBody<T>(
  * Handle API method routing
  */
 export function createMethodHandler(handlers: {
-  GET?: (request: NextRequest, context?: { params: Record<string, string> }) => Promise<NextResponse>;
-  POST?: (request: NextRequest, context?: { params: Record<string, string> }) => Promise<NextResponse>;
-  PUT?: (request: NextRequest, context?: { params: Record<string, string> }) => Promise<NextResponse>;
-  DELETE?: (request: NextRequest, context?: { params: Record<string, string> }) => Promise<NextResponse>;
-  PATCH?: (request: NextRequest, context?: { params: Record<string, string> }) => Promise<NextResponse>;
+  GET?: (request: NextRequest, context?: { params: Promise<Record<string, string>> }) => Promise<NextResponse>;
+  POST?: (request: NextRequest, context?: { params: Promise<Record<string, string>> }) => Promise<NextResponse>;
+  PUT?: (request: NextRequest, context?: { params: Promise<Record<string, string>> }) => Promise<NextResponse>;
+  DELETE?: (request: NextRequest, context?: { params: Promise<Record<string, string>> }) => Promise<NextResponse>;
+  PATCH?: (request: NextRequest, context?: { params: Promise<Record<string, string>> }) => Promise<NextResponse>;
 }) {
-  return async (request: NextRequest, context?: { params: Record<string, string> }) => {
+  return async (request: NextRequest, context?: { params: Promise<Record<string, string>> }) => {
     const method = request.method as keyof typeof handlers;
     
     if (!(method in handlers)) {

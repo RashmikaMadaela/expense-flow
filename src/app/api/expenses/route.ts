@@ -47,23 +47,29 @@ async function handleCreateExpense(request: NextRequest) {
       });
 
       // Calculate participant amounts based on split type
-      let participantAmounts: { userId: string; amount: number }[];
+      let participantData: { userId?: string; customName?: string; amount: number }[] = [];
       
-      if (expenseData.splitType === 'EQUAL') {
-        const userIds = expenseData.participants.map(p => p.userId);
-        const equalAmounts = calculateEqualSplit(amountInCents, userIds.length);
-        participantAmounts = userIds.map((userId, index) => ({
-          userId,
+      // If no participants provided, this is a personal expense
+      if (!expenseData.participants || expenseData.participants.length === 0) {
+        // No participants to create for personal expenses
+        participantData = [];
+      } else if (expenseData.splitType === 'EQUAL') {
+        const totalParticipants = expenseData.participants.length;
+        const equalAmounts = calculateEqualSplit(amountInCents, totalParticipants);
+        participantData = expenseData.participants.map((p, index) => ({
+          userId: p.userId,
+          customName: p.customName,
           amount: equalAmounts[index],
         }));
       } else if (expenseData.splitType === 'EXACT') {
-        participantAmounts = expenseData.participants.map(p => ({
+        participantData = expenseData.participants.map(p => ({
           userId: p.userId,
+          customName: p.customName,
           amount: Math.round((p.amount || 0) * 100), // Convert to cents
         }));
         
         // Validate that amounts add up
-        const totalParticipantAmount = participantAmounts.reduce(
+        const totalParticipantAmount = participantData.reduce(
           (sum, p) => sum + p.amount,
           0
         );
@@ -74,14 +80,27 @@ async function handleCreateExpense(request: NextRequest) {
         throw new Error('Percentage split not yet implemented');
       }
 
-      // Create expense participants
-      await tx.expenseParticipant.createMany({
-        data: participantAmounts.map(({ userId: participantId, amount }) => ({
-          expenseId: expense.id,
-          userId: participantId,
-          share: amount,
-        })),
-      });
+      // Create expense participants only if there are any
+      if (participantData.length > 0) {
+        for (const { userId, customName, amount } of participantData) {
+          if (userId) {
+            // Create participant with registered user
+            await tx.expenseParticipant.create({
+              data: {
+                expenseId: expense.id,
+                userId: userId,
+                share: amount,
+              },
+            });
+          } else if (customName) {
+            // Create participant with custom name (use raw query temporarily)
+            await tx.$executeRaw`
+              INSERT INTO expense_participants (id, "expenseId", "customName", share, status, "createdAt", "updatedAt")
+              VALUES (gen_random_uuid(), ${expense.id}, ${customName}, ${amount}, 'PENDING', NOW(), NOW())
+            `;
+          }
+        }
+      }
 
       // Return the created expense with participants
       return await tx.expense.findUnique({
@@ -127,18 +146,14 @@ async function handleGetExpenses(request: NextRequest) {
   try {
     const url = new URL(request.url);
     const queryParams = {
-      groupId: url.searchParams.get('groupId'),
-      limit: url.searchParams.get('limit'),
-      offset: url.searchParams.get('offset'),
-      startDate: url.searchParams.get('startDate'),
-      endDate: url.searchParams.get('endDate'),
+      groupId: url.searchParams.get('groupId') || undefined,
+      limit: url.searchParams.get('limit') ? parseInt(url.searchParams.get('limit')!, 10) : undefined,
+      offset: url.searchParams.get('offset') ? parseInt(url.searchParams.get('offset')!, 10) : undefined,
+      startDate: url.searchParams.get('startDate') || undefined,
+      endDate: url.searchParams.get('endDate') || undefined,
     };
     
-    const validationResult = GetExpensesSchema.safeParse({
-      ...queryParams,
-      limit: queryParams.limit ? parseInt(queryParams.limit, 10) : undefined,
-      offset: queryParams.offset ? parseInt(queryParams.offset, 10) : undefined,
-    });
+    const validationResult = GetExpensesSchema.safeParse(queryParams);
     
     if (!validationResult.success) {
       return createApiError(
@@ -151,6 +166,7 @@ async function handleGetExpenses(request: NextRequest) {
     
     // Build where clause
     const whereClause = {
+      deletedAt: null, // Only return non-deleted expenses
       OR: [
         { createdBy: userId },
         { participants: { some: { userId } } },

@@ -12,7 +12,7 @@ import type { Session } from 'next-auth';
 
 export async function POST(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   const authResult = await requireAuth();
   
@@ -31,10 +31,12 @@ export async function POST(
   if (error) return error;
   
   try {
+    const { id } = await params;
+    
     // Check if user is admin of the group
     const membership = await prisma.groupMember.findFirst({
       where: {
-        groupId: params.id,
+        groupId: id,
         userId,
         role: 'ADMIN',
       },
@@ -57,7 +59,7 @@ export async function POST(
     // Check if user is already a member
     const existingMembership = await prisma.groupMember.findFirst({
       where: {
-        groupId: params.id,
+        groupId: id,
         userId: memberData.userId,
       },
     });
@@ -69,7 +71,7 @@ export async function POST(
     // Add the member
     const newMember = await prisma.groupMember.create({
       data: {
-        groupId: params.id,
+        groupId: id,
         userId: memberData.userId,
         role: 'MEMBER',
       },

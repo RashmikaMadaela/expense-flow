@@ -12,7 +12,7 @@ import type { Session } from 'next-auth';
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   const authResult = await requireAuth();
   
@@ -24,9 +24,10 @@ export async function GET(
   const userId = getUserId(session);
   
   try {
+    const { id } = await params;
     const expense = await prisma.expense.findFirst({
       where: {
-        id: params.id,
+        id: id,
         OR: [
           { createdBy: userId },
           { participants: { some: { userId } } },
@@ -69,7 +70,7 @@ export async function GET(
 
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   const authResult = await requireAuth();
   
@@ -88,10 +89,11 @@ export async function PUT(
   if (error) return error;
   
   try {
+    const { id } = await params;
     // First, verify the user can update this expense (creator only)
     const existingExpense = await prisma.expense.findFirst({
       where: {
-        id: params.id,
+        id: id,
         createdBy: userId,
       },
     });
@@ -123,7 +125,7 @@ export async function PUT(
       }
 
       await tx.expense.update({
-        where: { id: params.id },
+        where: { id: id },
         data: updateExpenseData,
       });
 
@@ -131,22 +133,32 @@ export async function PUT(
       if (updateData.participants) {
         // Delete existing participants
         await tx.expenseParticipant.deleteMany({
-          where: { expenseId: params.id },
+          where: { expenseId: id },
         });
 
         // Create new participants
-        await tx.expenseParticipant.createMany({
-          data: updateData.participants.map(p => ({
-            expenseId: params.id,
-            userId: p.userId,
-            share: p.amount ? Math.round(p.amount * 100) : 0,
-          })),
-        });
+        for (const p of updateData.participants) {
+          if (p.userId) {
+            await tx.expenseParticipant.create({
+              data: {
+                expenseId: id,
+                userId: p.userId,
+                share: p.amount ? Math.round(p.amount * 100) : 0,
+              },
+            });
+          } else if (p.customName) {
+            // Use raw query for custom participants until Prisma client is regenerated
+            await tx.$executeRaw`
+              INSERT INTO expense_participants (id, "expenseId", "customName", share, status, "createdAt", "updatedAt")
+              VALUES (gen_random_uuid(), ${id}, ${p.customName}, ${p.amount ? Math.round(p.amount * 100) : 0}, 'PENDING', NOW(), NOW())
+            `;
+          }
+        }
       }
 
       // Return updated expense with relations
       return await tx.expense.findUnique({
-        where: { id: params.id },
+        where: { id: id },
         include: {
           creator: {
             select: { id: true, name: true, email: true, image: true },
@@ -174,7 +186,7 @@ export async function PUT(
 
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   const authResult = await requireAuth();
   
@@ -186,10 +198,11 @@ export async function DELETE(
   const userId = getUserId(session);
   
   try {
+    const { id } = await params;
     // First, verify the user can delete this expense (creator only)
     const existingExpense = await prisma.expense.findFirst({
       where: {
-        id: params.id,
+        id: id,
         createdBy: userId,
       },
     });
@@ -200,7 +213,7 @@ export async function DELETE(
 
     // Soft delete the expense
     await prisma.expense.update({
-      where: { id: params.id },
+      where: { id: id },
       data: { deletedAt: new Date() },
     });
 

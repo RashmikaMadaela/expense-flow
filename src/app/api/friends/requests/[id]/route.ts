@@ -12,7 +12,7 @@ import type { Session } from 'next-auth';
 
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   const authResult = await requireAuth();
   
@@ -31,10 +31,11 @@ export async function PUT(
   if (error) return error;
   
   try {
+    const { id } = await params;
     // Find the friend request
     const friendRequest = await prisma.friendRequest.findFirst({
       where: {
-        id: params.id,
+        id: id,
         receiverId: userId, // Only the receiver can respond
         status: 'PENDING',
       },
@@ -54,7 +55,7 @@ export async function PUT(
 
     // Update the friend request status
     const updatedRequest = await prisma.friendRequest.update({
-      where: { id: params.id },
+      where: { id: id },
       data: {
         status: responseData.accept ? 'ACCEPTED' : 'REJECTED',
       },
