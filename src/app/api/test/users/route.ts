@@ -7,6 +7,11 @@ import {
 import { prisma } from '@/lib/prisma';
 
 async function handleGetUsersTest(request: NextRequest) {
+  // Only allow in development environment
+  if (process.env.NODE_ENV !== 'development') {
+    return createApiError('Test endpoints only available in development', 403);
+  }
+
   try {
     const url = new URL(request.url);
     const limit = parseInt(url.searchParams.get('limit') || '5', 10);
@@ -38,6 +43,11 @@ async function handleGetUsersTest(request: NextRequest) {
 }
 
 async function handleCreateTestUser(request: NextRequest) {
+  // Only allow in development environment
+  if (process.env.NODE_ENV !== 'development') {
+    return createApiError('Test endpoints only available in development', 403);
+  }
+
   try {
     const body = await request.json();
     const testUser = await prisma.user.create({
