@@ -28,6 +28,10 @@ async function handleCreateSettlement(request: NextRequest) {
   
   if (error) return error;
   
+  if (!settlementData) {
+    return createApiError('Validation failed', 400);
+  }
+  
   try {
     // Verify the payer is the current user (you can only record your own payments)
     if (settlementData.payerId !== userId) {

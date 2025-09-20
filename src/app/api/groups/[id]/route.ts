@@ -97,6 +97,10 @@ export async function PUT(
   
   if (error) return error;
   
+  if (!updateData) {
+    return createApiError('Validation failed', 400);
+  }
+  
   try {
     const { id } = await params;
     // Check if user is admin of the group

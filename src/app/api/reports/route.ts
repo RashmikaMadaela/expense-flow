@@ -54,11 +54,16 @@ export async function GET(request: Request) {
     });
     
     // Calculate basic stats
-    const totalExpenses = expenses.reduce((sum, expense) => sum + expense.amount, 0) / 100;
-    const expenseCount = expenses.length;
+    // Separate positive and negative amounts for clearer reporting
+    const positiveExpenses = expenses.filter(e => e.amount > 0);
+    const negativeExpenses = expenses.filter(e => e.amount < 0);
     
-    // Group expenses by category
-    const categoryTotals = expenses.reduce((acc, expense) => {
+    const totalExpenses = positiveExpenses.reduce((sum, expense) => sum + expense.amount, 0) / 100; // Only actual expenses
+    const totalIncome = Math.abs(negativeExpenses.reduce((sum, expense) => sum + expense.amount, 0)) / 100; // Settlement income
+    const expenseCount = positiveExpenses.length; // Only count actual expenses
+    
+    // Group expenses by category (only positive amounts for expense tracking)
+    const categoryTotals = positiveExpenses.reduce((acc, expense) => {
       const category = expense.category || 'other';
       acc[category] = (acc[category] || 0) + (expense.amount / 100);
       return acc;
@@ -80,7 +85,7 @@ export async function GET(request: Request) {
       const monthStart = new Date(now.getFullYear(), now.getMonth() - i, 1);
       const monthEnd = new Date(now.getFullYear(), now.getMonth() - i + 1, 0);
       
-      const monthExpenses = expenses.filter(expense => 
+      const monthExpenses = positiveExpenses.filter(expense => 
         expense.createdAt >= monthStart && expense.createdAt <= monthEnd
       );
       
@@ -99,6 +104,8 @@ export async function GET(request: Request) {
     
     const reportData = {
       totalExpenses,
+      totalIncome, // Settlement income received
+      netSpending: totalExpenses - totalIncome, // Net amount spent
       monthlyExpenses,
       expenseCount,
       categories: categoryTotals,

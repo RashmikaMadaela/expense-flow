@@ -29,6 +29,10 @@ model User {
   sentFriendRequests     FriendRequest[] @relation("FriendRequestSender")
   receivedFriendRequests FriendRequest[] @relation("FriendRequestReceiver")
   
+  // Settlement request relationships
+  sentSettlementRequests     SettlementRequest[] @relation("SettlementRequestSender")
+  receivedSettlementRequests SettlementRequest[] @relation("SettlementRequestReceiver")
+  
   // Group relationships
   groupMemberships GroupMember[]
   
@@ -172,6 +176,27 @@ model FriendRequest {
   @@map("friend_requests")
 }
 
+// Settlement requests for peer-to-peer payments
+model SettlementRequest {
+  id        String @id @default(cuid())
+  amount    Int    // Amount in cents
+  message   String?
+  status    SettlementRequestStatus @default(PENDING)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  // Relationships
+  senderId   String
+  sender     User   @relation("SettlementRequestSender", fields: [senderId], references: [id])
+  receiverId String
+  receiver   User   @relation("SettlementRequestReceiver", fields: [receiverId], references: [id])
+  
+  @@index([senderId])
+  @@index([receiverId])
+  @@index([status])
+  @@map("settlement_requests")
+}
+
 // Enums
 enum ParticipantStatus {
   PENDING
@@ -182,6 +207,12 @@ enum ParticipantStatus {
 enum SettlementStatus {
   PENDING
   CONFIRMED
+  REJECTED
+}
+
+enum SettlementRequestStatus {
+  PENDING
+  ACCEPTED
   REJECTED
 }
 

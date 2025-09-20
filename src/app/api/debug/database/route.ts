@@ -69,7 +69,7 @@ export async function GET(request: NextRequest) {
           users: userCount,
           expenses: expenseCount,
           totalAmount: totalAmount._sum.amount ? totalAmount._sum.amount / 100 : 0,
-          currency: 'USD'
+          currency: 'LKR'
         };
         break;
         

@@ -28,6 +28,10 @@ async function handleCreateGroup(request: NextRequest) {
   
   if (error) return error;
   
+  if (!groupData) {
+    return createApiError('Validation failed', 400);
+  }
+  
   try {
     const result = await prisma.$transaction(async (tx) => {
       // Create the group

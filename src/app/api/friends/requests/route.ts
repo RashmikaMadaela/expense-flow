@@ -28,6 +28,10 @@ async function handleSendFriendRequest(request: NextRequest) {
   
   if (error) return error;
   
+  if (!requestData) {
+    return createApiError('Validation failed', 400);
+  }
+  
   try {
     // Can't send friend request to yourself
     if (requestData.friendId === userId) {

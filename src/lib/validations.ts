@@ -19,9 +19,9 @@ export const SearchUsersSchema = z.object({
 export const CreateExpenseSchema = z.object({
   amount: z.number().positive('Amount must be positive'),
   description: z.string().min(1, 'Description is required').max(200, 'Description too long'),
-  groupId: z.string().uuid('Invalid group ID').optional(),
+  groupId: z.string().cuid('Invalid group ID').optional(),
   participants: z.array(z.object({
-    userId: z.string().uuid('Invalid user ID').optional(),
+    userId: z.string().cuid('Invalid user ID').optional(),
     customName: z.string().min(1, 'Custom name is required').max(100, 'Name too long').optional(),
     amount: z.number().positive('Participant amount must be positive').optional(),
   }).refine(data => data.userId || data.customName, {
@@ -38,7 +38,7 @@ export const UpdateExpenseSchema = z.object({
   category: z.string().max(50, 'Category too long').optional(),
   notes: z.string().max(500, 'Notes too long').optional(),
   participants: z.array(z.object({
-    userId: z.string().uuid('Invalid user ID').optional(),
+    userId: z.string().cuid('Invalid user ID').optional(),
     customName: z.string().min(1, 'Custom name is required').max(100, 'Name too long').optional(),
     amount: z.number().positive('Participant amount must be positive').optional(),
   }).refine(data => data.userId || data.customName, {
@@ -47,7 +47,7 @@ export const UpdateExpenseSchema = z.object({
 });
 
 export const GetExpensesSchema = z.object({
-  groupId: z.string().uuid('Invalid group ID').optional(),
+  groupId: z.string().cuid('Invalid group ID').optional(),
   limit: z.number().int().min(1).max(100).optional().default(20),
   offset: z.number().int().min(0).optional().default(0),
   startDate: z.string().datetime().optional(),
@@ -69,18 +69,18 @@ export const UpdateGroupSchema = z.object({
 });
 
 export const AddGroupMemberSchema = z.object({
-  userId: z.string().uuid('Invalid user ID'),
+  userId: z.string().cuid('Invalid user ID'),
 });
 
 /**
  * Friend-related validation schemas
  */
 export const SendFriendRequestSchema = z.object({
-  friendId: z.string().uuid('Invalid user ID'),
+  friendId: z.string().cuid('Invalid user ID'),
 });
 
 export const RespondFriendRequestSchema = z.object({
-  requestId: z.string().uuid('Invalid request ID'),
+  requestId: z.string().cuid('Invalid request ID'),
   accept: z.boolean(),
 });
 
@@ -88,15 +88,15 @@ export const RespondFriendRequestSchema = z.object({
  * Settlement-related validation schemas
  */
 export const CreateSettlementSchema = z.object({
-  payerId: z.string().uuid('Invalid payer ID'),
-  payeeId: z.string().uuid('Invalid payee ID'),
+  payerId: z.string().cuid('Invalid payer ID'),
+  payeeId: z.string().cuid('Invalid payee ID'),
   amount: z.number().positive('Amount must be positive'),
-  groupId: z.string().uuid('Invalid group ID').optional(),
+  groupId: z.string().cuid('Invalid group ID').optional(),
   notes: z.string().max(500, 'Notes too long').optional(),
 });
 
 export const ConfirmSettlementSchema = z.object({
-  settlementId: z.string().uuid('Invalid settlement ID'),
+  settlementId: z.string().cuid('Invalid settlement ID'),
   confirmed: z.boolean(),
 });
 
@@ -109,7 +109,7 @@ export const PaginationSchema = z.object({
 });
 
 export const UUIDParamSchema = z.object({
-  id: z.string().uuid('Invalid ID format'),
+  id: z.string().cuid('Invalid ID format'),
 });
 
 // Type exports for use in API routes

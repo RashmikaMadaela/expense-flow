@@ -6,9 +6,9 @@ export function cn(...inputs: ClassValue[]) {
 }
 
 // Format currency values
-export function formatCurrency(cents: number, currency: string = 'USD'): string {
+export function formatCurrency(cents: number, currency: string = 'LKR'): string {
   const amount = cents / 100
-  return new Intl.NumberFormat('en-US', {
+  return new Intl.NumberFormat('en-LK', {
     style: 'currency',
     currency: currency,
   }).format(amount)

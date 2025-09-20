@@ -21,7 +21,6 @@ ExpenseFlow is a modern, full-stack expense tracking and bill splitting applicat
 - 🚧 **Bill Splitting** - Split expenses with friends and groups  
 - 🚧 **Group Management** - Create groups for trips, roommates, or shared activities
 - 🚧 **Settlement Tracking** - Track who owes what and when payments are made
-- 🚧 **Receipt Upload** - Attach photos of receipts to expenses
 - 🚧 **Multi-Currency Support** - Handle expenses in different currencies
 - 🚧 **Payment Integration** - Connect with Venmo, PayPal, etc.
 - 🚧 **Export & Reports** - Generate spending reports and export data
@@ -497,7 +496,6 @@ We welcome contributions! See our [Contributing Guidelines](CONTRIBUTING.md) for
 ### Phase 2: Enhanced Features (3-4 weeks)
 - [ ] Custom amounts and percentage splits
 - [ ] Friend system and participant search
-- [ ] Receipt photo uploads
 - [ ] Settlement confirmation modes
 - [ ] Expense editing and audit trail
 

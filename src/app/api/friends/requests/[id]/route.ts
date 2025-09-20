@@ -30,6 +30,10 @@ export async function PUT(
   
   if (error) return error;
   
+  if (!responseData) {
+    return createApiError('Validation failed', 400);
+  }
+  
   try {
     const { id } = await params;
     // Find the friend request

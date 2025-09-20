@@ -33,7 +33,6 @@ export default function Dashboard() {
       const response = await fetch('/api/expenses/stats');
       if (response.ok) {
         const result = await response.json();
-        console.log('Stats API response:', result); // Debug log
         const data = result.data || result; // Handle both wrapped and unwrapped responses
         setStats({
           totalExpenses: data.totalExpenses || 0,
@@ -109,93 +108,93 @@ export default function Dashboard() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 p-6">
-      <div className="max-w-7xl mx-auto">
+    <div className="min-h-screen bg-gray-50/50">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-6 lg:py-8">
         {/* Header */}
-        <div className="flex items-center justify-between mb-8">
-          <div>
-            <h1 className="text-3xl font-bold text-gray-900">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-6 sm:mb-8">
+          <div className="mb-4 sm:mb-0">
+            <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">
               Welcome back, {session.user?.name?.split(' ')[0]}!
             </h1>
-            <p className="text-gray-600 mt-1">
+            <p className="text-gray-600 mt-1 text-sm sm:text-base">
               Track your expenses and manage your finances
             </p>
           </div>
           <Button
             variant="outline"
             onClick={() => signOut()}
-            className="flex items-center gap-2"
+            className="flex items-center gap-2 self-start sm:self-auto"
           >
             <LogOut className="h-4 w-4" />
-            Sign Out
+            <span className="hidden sm:inline">Sign Out</span>
           </Button>
         </div>
 
         {/* Stats Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-          <Card className="p-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 mb-6 sm:mb-8">
+          <Card className="p-4 sm:p-6 hover:shadow-md transition-shadow">
             <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-gray-600">Total Expenses</p>
-                <p className="text-3xl font-bold text-gray-900">
+              <div className="min-w-0 flex-1">
+                <p className="text-sm font-medium text-gray-600 truncate">Total Expenses</p>
+                <p className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-900 truncate">
                   {formatAmount(stats.totalExpenses)}
                 </p>
               </div>
-              <div className="p-3 bg-blue-100 rounded-full">
-                <DollarSign className="h-6 w-6 text-blue-600" />
+              <div className="p-3 bg-blue-100 rounded-full flex-shrink-0 ml-4">
+                <DollarSign className="h-5 w-5 sm:h-6 sm:w-6 text-blue-600" />
               </div>
             </div>
           </Card>
 
-          <Card className="p-6">
+          <Card className="p-4 sm:p-6 hover:shadow-md transition-shadow">
             <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-gray-600">This Month</p>
-                <p className="text-3xl font-bold text-gray-900">
+              <div className="min-w-0 flex-1">
+                <p className="text-sm font-medium text-gray-600 truncate">This Month</p>
+                <p className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-900 truncate">
                   {formatAmount(stats.monthlyExpenses)}
                 </p>
               </div>
-              <div className="p-3 bg-green-100 rounded-full">
-                <TrendingUp className="h-6 w-6 text-green-600" />
+              <div className="p-3 bg-emerald-100 rounded-full flex-shrink-0 ml-4">
+                <TrendingUp className="h-5 w-5 sm:h-6 sm:w-6 text-emerald-600" />
               </div>
             </div>
           </Card>
 
-          <Card className="p-6">
+          <Card className="p-4 sm:p-6 hover:shadow-md transition-shadow">
             <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-gray-600">Total Count</p>
-                <p className="text-3xl font-bold text-gray-900">{stats.expenseCount}</p>
+              <div className="min-w-0 flex-1">
+                <p className="text-sm font-medium text-gray-600 truncate">Total Count</p>
+                <p className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-900">{stats.expenseCount}</p>
               </div>
-              <div className="p-3 bg-purple-100 rounded-full">
-                <Receipt className="h-6 w-6 text-purple-600" />
+              <div className="p-3 bg-purple-100 rounded-full flex-shrink-0 ml-4">
+                <Receipt className="h-5 w-5 sm:h-6 sm:w-6 text-purple-600" />
               </div>
             </div>
           </Card>
 
-          <Card className="p-6">
+          <Card className="p-4 sm:p-6 hover:shadow-md transition-shadow">
             <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-gray-600">Shared Groups</p>
-                <p className="text-3xl font-bold text-gray-900">0</p>
+              <div className="min-w-0 flex-1">
+                <p className="text-sm font-medium text-gray-600 truncate">Shared Groups</p>
+                <p className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-900">0</p>
               </div>
-              <div className="p-3 bg-orange-100 rounded-full">
-                <Users className="h-6 w-6 text-orange-600" />
+              <div className="p-3 bg-orange-100 rounded-full flex-shrink-0 ml-4">
+                <Users className="h-5 w-5 sm:h-6 sm:w-6 text-orange-600" />
               </div>
             </div>
           </Card>
         </div>
 
         {/* Add Expense Section */}
-        <div className="mb-8">
+        <div className="mb-6 sm:mb-8">
           <AddExpense onExpenseAdded={handleExpenseAdded} />
         </div>
 
         {/* Main Content Area */}
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
           <div className="lg:col-span-3">
-            <Card className="p-6">
-              <h2 className="text-xl font-semibold mb-6">Your Expenses</h2>
+            <Card className="p-4 sm:p-6 shadow-md">
+              <h2 className="text-xl font-semibold mb-4 sm:mb-6">Your Expenses</h2>
               <ExpenseList 
                 refreshTrigger={refreshTrigger} 
                 onExpenseDeleted={handleExpenseAdded}
@@ -204,30 +203,36 @@ export default function Dashboard() {
           </div>
 
           <div className="space-y-6">
-            <Card className="p-6">
+            <Card className="p-4 sm:p-6 shadow-md">
               <h2 className="text-xl font-semibold mb-4">Categories</h2>
               <div className="space-y-3">
                 {stats.categories && Object.entries(stats.categories).length > 0 ? (
                   Object.entries(stats.categories)
                     .sort(([,a], [,b]) => b - a)
+                    .slice(0, 5) // Show top 5 categories
                     .map(([category, amount]) => (
-                      <div key={category} className="flex justify-between items-center">
-                        <span className="text-sm">{getCategoryLabel(category)}</span>
-                        <span className="text-sm font-semibold">{formatAmount(amount)}</span>
+                      <div key={category} className="flex justify-between items-center p-2 hover:bg-gray-50 rounded-md transition-colors">
+                        <span className="text-sm font-medium text-gray-700">{getCategoryLabel(category)}</span>
+                        <span className="text-sm font-semibold text-gray-900">{formatAmount(amount)}</span>
                       </div>
                     ))
                 ) : (
-                  <p className="text-sm text-gray-500">No categories yet</p>
+                  <div className="text-center py-8">
+                    <div className="w-12 h-12 mx-auto mb-3 bg-gray-100 rounded-full flex items-center justify-center">
+                      <Receipt className="w-6 h-6 text-gray-400" />
+                    </div>
+                    <p className="text-sm text-gray-500">No categories yet</p>
+                  </div>
                 )}
               </div>
             </Card>
 
-            <Card className="p-6">
+            <Card className="p-4 sm:p-6 shadow-md">
               <h2 className="text-xl font-semibold mb-4">Quick Actions</h2>
               <div className="space-y-3">
                 <Button 
                   variant="outline" 
-                  className="w-full justify-start" 
+                  className="w-full justify-start hover:bg-blue-50 hover:border-blue-200 hover:text-blue-700 transition-colors" 
                   size="lg"
                   onClick={() => setCurrentView('groups')}
                 >
@@ -236,12 +241,25 @@ export default function Dashboard() {
                 </Button>
                 <Button 
                   variant="outline" 
-                  className="w-full justify-start" 
+                  className="w-full justify-start hover:bg-purple-50 hover:border-purple-200 hover:text-purple-700 transition-colors" 
                   size="lg"
                   onClick={() => setCurrentView('reports')}
                 >
                   <Receipt className="h-5 w-5 mr-3" />
                   View Reports
+                </Button>
+                <Button 
+                  variant="outline" 
+                  className="w-full justify-start hover:bg-emerald-50 hover:border-emerald-200 hover:text-emerald-700 transition-colors" 
+                  size="lg"
+                  onClick={() => {
+                    // Scroll to expense list where settlements are accessible
+                    const expenseSection = document.querySelector('.lg\\:col-span-3');
+                    expenseSection?.scrollIntoView({ behavior: 'smooth' });
+                  }}
+                >
+                  <DollarSign className="h-5 w-5 mr-3" />
+                  View Settlements
                 </Button>
               </div>
             </Card>

@@ -36,25 +36,33 @@ export async function GET() {
     });
     
     // Calculate total expenses (in cents, convert to dollars)
-    const totalExpenses = expenses.reduce((sum, expense) => sum + expense.amount, 0) / 100;
+    // Separate positive and negative amounts for clearer reporting
+    const positiveExpenses = expenses.filter(e => e.amount > 0);
+    const negativeExpenses = expenses.filter(e => e.amount < 0);
+    
+    // Calculate different totals
+    const totalExpenses = positiveExpenses.reduce((sum, expense) => sum + expense.amount, 0) / 100; // Only actual expenses
+    const totalIncome = Math.abs(negativeExpenses.reduce((sum, expense) => sum + expense.amount, 0)) / 100; // Settlement income
     
     // Calculate monthly expenses
-    const monthlyExpenses = expenses
+    const monthlyExpenses = positiveExpenses
       .filter(expense => expense.createdAt >= startOfMonth)
       .reduce((sum, expense) => sum + expense.amount, 0) / 100;
     
-    // Get expense count
-    const expenseCount = expenses.length;
+    // Get expense count (only actual expenses, not settlements)
+    const expenseCount = positiveExpenses.length;
     
-    // Group expenses by category
-    const categories = expenses.reduce((acc, expense) => {
+    // Group expenses by category (only positive amounts for expense tracking)
+    const categories = positiveExpenses.reduce((acc, expense) => {
       const category = expense.category || 'other';
       acc[category] = (acc[category] || 0) + (expense.amount / 100);
       return acc;
     }, {} as Record<string, number>);
     
     const stats = {
-      totalExpenses,
+      totalExpenses, // Only actual expenses
+      totalIncome,   // Settlement income received
+      netSpending: totalExpenses - totalIncome, // Net amount spent
       monthlyExpenses,
       expenseCount,
       categories,

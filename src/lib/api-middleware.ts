@@ -59,7 +59,7 @@ export function createApiError(
 export async function validateRequestBody<T>(
   request: NextRequest,
   schema: z.ZodSchema<T>
-): Promise<{ data: T; error?: NextResponse }> {
+): Promise<{ data?: T; error?: NextResponse }> {
   try {
     const body = await request.json();
     const validatedData = schema.parse(body);
@@ -67,7 +67,6 @@ export async function validateRequestBody<T>(
   } catch (error) {
     if (error instanceof z.ZodError) {
       return {
-        data: {} as T,
         error: createApiError(
           `Validation error: ${error.issues.map((issue) => issue.message).join(', ')}`,
           400
@@ -75,7 +74,6 @@ export async function validateRequestBody<T>(
       };
     }
     return {
-      data: {} as T,
       error: createApiError('Invalid request body', 400),
     };
   }

@@ -60,7 +60,38 @@ async function handleSearchUsers(request: NextRequest) {
       take: searchLimit,
     });
 
-    return createApiResponse(users, `Found ${users.length} users`);
+    // For each user, check friendship status and pending requests
+    const usersWithStatus = await Promise.all(
+      users.map(async (user) => {
+        // Check if they are already friends
+        const friendship = await prisma.friendRequest.findFirst({
+          where: {
+            OR: [
+              { senderId: userId, receiverId: user.id, status: 'ACCEPTED' },
+              { senderId: user.id, receiverId: userId, status: 'ACCEPTED' },
+            ],
+          },
+        });
+
+        // Check if there's a pending request
+        const pendingRequest = await prisma.friendRequest.findFirst({
+          where: {
+            OR: [
+              { senderId: userId, receiverId: user.id, status: 'PENDING' },
+              { senderId: user.id, receiverId: userId, status: 'PENDING' },
+            ],
+          },
+        });
+
+        return {
+          ...user,
+          isFriend: !!friendship,
+          hasPendingRequest: !!pendingRequest,
+        };
+      })
+    );
+
+    return createApiResponse(usersWithStatus, `Found ${usersWithStatus.length} users`);
   } catch (error) {
     console.error('Error searching users:', error);
     return createApiError('Failed to search users', 500);

@@ -30,6 +30,10 @@ export async function POST(
   
   if (error) return error;
   
+  if (!memberData) {
+    return createApiError('Validation failed', 400);
+  }
+  
   try {
     const { id } = await params;
     

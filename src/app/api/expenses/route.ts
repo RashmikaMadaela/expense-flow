@@ -29,6 +29,10 @@ async function handleCreateExpense(request: NextRequest) {
   
   if (error) return error;
   
+  if (!expenseData) {
+    return createApiError('Validation failed', 400);
+  }
+  
   try {
     // Convert amount to cents for storage
     const amountInCents = Math.round(expenseData.amount * 100);
@@ -54,27 +58,37 @@ async function handleCreateExpense(request: NextRequest) {
         // No participants to create for personal expenses
         participantData = [];
       } else if (expenseData.splitType === 'EQUAL') {
-        const totalParticipants = expenseData.participants.length;
+        // For shared expenses, always include the owner in the split
+        const allParticipants = [...expenseData.participants];
+        const ownerAlreadyIncluded = allParticipants.some(p => p.userId === userId);
+        
+        if (!ownerAlreadyIncluded) {
+          // Add the owner as a participant
+          allParticipants.unshift({ userId: userId });
+        }
+        
+        const totalParticipants = allParticipants.length;
         const equalAmounts = calculateEqualSplit(amountInCents, totalParticipants);
-        participantData = expenseData.participants.map((p, index) => ({
+        participantData = allParticipants.map((p, index) => ({
           userId: p.userId,
           customName: p.customName,
           amount: equalAmounts[index],
         }));
       } else if (expenseData.splitType === 'EXACT') {
+        // For exact split, use the provided amounts
         participantData = expenseData.participants.map(p => ({
           userId: p.userId,
           customName: p.customName,
           amount: Math.round((p.amount || 0) * 100), // Convert to cents
         }));
         
-        // Validate that amounts add up
+        // Validate that amounts add up to total
         const totalParticipantAmount = participantData.reduce(
           (sum, p) => sum + p.amount,
           0
         );
-        if (totalParticipantAmount !== amountInCents) {
-          throw new Error('Participant amounts do not add up to total expense amount');
+        if (Math.abs(totalParticipantAmount - amountInCents) > 1) { // Allow 1 cent difference for rounding
+          throw new Error(`Participant amounts (${totalParticipantAmount/100}) do not match total expense amount (${amountInCents/100})`);
         }
       } else {
         throw new Error('Percentage split not yet implemented');
