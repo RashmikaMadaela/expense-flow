@@ -19,7 +19,6 @@ export const SearchUsersSchema = z.object({
 export const CreateExpenseSchema = z.object({
   amount: z.number().positive('Amount must be positive'),
   description: z.string().min(1, 'Description is required').max(200, 'Description too long'),
-  groupId: z.string().cuid('Invalid group ID').optional(),
   participants: z.array(z.object({
     userId: z.string().cuid('Invalid user ID').optional(),
     customName: z.string().min(1, 'Custom name is required').max(100, 'Name too long').optional(),
@@ -47,29 +46,10 @@ export const UpdateExpenseSchema = z.object({
 });
 
 export const GetExpensesSchema = z.object({
-  groupId: z.string().cuid('Invalid group ID').optional(),
   limit: z.number().int().min(1).max(100).optional().default(20),
   offset: z.number().int().min(0).optional().default(0),
   startDate: z.string().datetime().optional(),
   endDate: z.string().datetime().optional(),
-});
-
-/**
- * Group-related validation schemas
- */
-export const CreateGroupSchema = z.object({
-  name: z.string().min(1, 'Group name is required').max(100, 'Group name too long'),
-  description: z.string().max(500, 'Description too long').optional(),
-  members: z.array(z.string().uuid('Invalid user ID')).optional(),
-});
-
-export const UpdateGroupSchema = z.object({
-  name: z.string().min(1, 'Group name is required').max(100, 'Group name too long').optional(),
-  description: z.string().max(500, 'Description too long').optional(),
-});
-
-export const AddGroupMemberSchema = z.object({
-  userId: z.string().cuid('Invalid user ID'),
 });
 
 /**
@@ -91,7 +71,6 @@ export const CreateSettlementSchema = z.object({
   payerId: z.string().cuid('Invalid payer ID'),
   payeeId: z.string().cuid('Invalid payee ID'),
   amount: z.number().positive('Amount must be positive'),
-  groupId: z.string().cuid('Invalid group ID').optional(),
   notes: z.string().max(500, 'Notes too long').optional(),
 });
 
@@ -118,9 +97,6 @@ export type SearchUsers = z.infer<typeof SearchUsersSchema>;
 export type CreateExpense = z.infer<typeof CreateExpenseSchema>;
 export type UpdateExpense = z.infer<typeof UpdateExpenseSchema>;
 export type GetExpenses = z.infer<typeof GetExpensesSchema>;
-export type CreateGroup = z.infer<typeof CreateGroupSchema>;
-export type UpdateGroup = z.infer<typeof UpdateGroupSchema>;
-export type AddGroupMember = z.infer<typeof AddGroupMemberSchema>;
 export type SendFriendRequest = z.infer<typeof SendFriendRequestSchema>;
 export type RespondFriendRequest = z.infer<typeof RespondFriendRequestSchema>;
 export type CreateSettlement = z.infer<typeof CreateSettlementSchema>;

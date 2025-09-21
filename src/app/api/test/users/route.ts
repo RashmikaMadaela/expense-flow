@@ -27,7 +27,6 @@ async function handleGetUsersTest(request: NextRequest) {
           select: {
             createdExpenses: true,
             participations: true,
-            groupMemberships: true,
           },
         },
       },

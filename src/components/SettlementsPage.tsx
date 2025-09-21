@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { ArrowUpCircle, ArrowDownCircle, Send, CheckCircle, Clock } from 'lucide-react';
+import { useToast } from '@/hooks/use-toast';
 
 interface SettlementSummary {
   userId: string;
@@ -45,6 +46,7 @@ interface PendingSettlement {
 
 export default function SettlementsPage() {
   const { data: session } = useSession();
+  const { toast } = useToast();
   const [settlements, setSettlements] = useState<SettlementSummary[]>([]);
   const [pendingSettlements, setPendingSettlements] = useState<PendingSettlement[]>([]);
   const [loading, setLoading] = useState(true);
@@ -87,7 +89,7 @@ export default function SettlementsPage() {
     }
   };
 
-  const handleDirectSettlement = async (userId: string, amount: number) => {
+  const handleDirectSettlement = async (userId: string, amount: number, userName: string) => {
     setProcessingId(userId);
     try {
       const response = await fetch('/api/settlements/direct', {
@@ -105,19 +107,33 @@ export default function SettlementsPage() {
         // Refresh data
         await fetchSettlements();
         await fetchPendingSettlements();
+        
+        toast({
+          title: "Settlement completed!",
+          description: `Successfully settled ${formatCurrency(amount)} with ${userName}. Both accounts have been updated.`,
+          variant: "default",
+        });
       } else {
         console.error('Failed to process direct settlement:', result.error || 'Unknown error');
-        alert(`Failed to process settlement: ${result.error || 'Unknown error'}`);
+        toast({
+          title: "Settlement failed",
+          description: result.error || "Failed to process settlement. Please try again.",
+          variant: "destructive",
+        });
       }
     } catch (error) {
       console.error('Error processing direct settlement:', error);
-      alert('Error processing settlement. Please try again.');
+      toast({
+        title: "Settlement failed",
+        description: "Error processing settlement. Please check your connection and try again.",
+        variant: "destructive",
+      });
     } finally {
       setProcessingId(null);
     }
   };
 
-  const handleSettlementRequest = async (userId: string, amount: number) => {
+  const handleSettlementRequest = async (userId: string, amount: number, userName: string) => {
     setProcessingId(userId);
     try {
       const response = await fetch('/api/settlements/request', {
@@ -134,19 +150,33 @@ export default function SettlementsPage() {
       if (response.ok) {
         // Refresh data
         await fetchPendingSettlements();
+        
+        toast({
+          title: "Settlement request sent!",
+          description: `Sent settlement request for ${formatCurrency(amount)} to ${userName}. They will receive a notification to accept or reject.`,
+          variant: "default",
+        });
       } else {
         console.error('Failed to send settlement request:', result.error || 'Unknown error');
-        alert(`Failed to send settlement request: ${result.error || 'Unknown error'}`);
+        toast({
+          title: "Failed to send settlement request",
+          description: result.error || "Something went wrong. Please try again.",
+          variant: "destructive",
+        });
       }
     } catch (error) {
       console.error('Error sending settlement request:', error);
-      alert('Error sending settlement request. Please try again.');
+      toast({
+        title: "Failed to send settlement request",
+        description: "Error sending settlement request. Please check your connection and try again.",
+        variant: "destructive",
+      });
     } finally {
       setProcessingId(null);
     }
   };
 
-  const handleSettlementResponse = async (settlementId: string, action: 'accept' | 'reject') => {
+  const handleSettlementResponse = async (settlementId: string, action: 'accept' | 'reject', fromUserName: string, amount: number) => {
     setProcessingId(settlementId);
     try {
       const response = await fetch(`/api/settlements/${settlementId}/${action}`, {
@@ -159,13 +189,35 @@ export default function SettlementsPage() {
         // Refresh data
         await fetchSettlements();
         await fetchPendingSettlements();
+        
+        if (action === 'accept') {
+          toast({
+            title: "Settlement accepted!",
+            description: `Successfully accepted settlement request for ${formatCurrency(amount)} from ${fromUserName}. Both accounts have been updated.`,
+            variant: "default",
+          });
+        } else {
+          toast({
+            title: "Settlement rejected",
+            description: `Rejected settlement request from ${fromUserName}. They have been notified.`,
+            variant: "default",
+          });
+        }
       } else {
         console.error(`Failed to ${action} settlement:`, result.error || 'Unknown error');
-        alert(`Failed to ${action} settlement: ${result.error || 'Unknown error'}`);
+        toast({
+          title: `Failed to ${action} settlement`,
+          description: result.error || "Something went wrong. Please try again.",
+          variant: "destructive",
+        });
       }
     } catch (error) {
       console.error(`Error ${action}ing settlement:`, error);
-      alert(`Error ${action}ing settlement. Please try again.`);
+      toast({
+        title: `Failed to ${action} settlement`,
+        description: "Something went wrong. Please check your connection and try again.",
+        variant: "destructive",
+      });
     } finally {
       setProcessingId(null);
     }
@@ -307,7 +359,7 @@ export default function SettlementsPage() {
                         <Button
                           size="sm"
                           variant="outline"
-                          onClick={() => handleSettlementResponse(settlement.id, 'reject')}
+                          onClick={() => handleSettlementResponse(settlement.id, 'reject', settlement.fromUser.name, settlement.amount)}
                           disabled={processingId === settlement.id}
                           className="flex-1 sm:flex-none"
                         >
@@ -315,7 +367,7 @@ export default function SettlementsPage() {
                         </Button>
                         <Button
                           size="sm"
-                          onClick={() => handleSettlementResponse(settlement.id, 'accept')}
+                          onClick={() => handleSettlementResponse(settlement.id, 'accept', settlement.fromUser.name, settlement.amount)}
                           disabled={processingId === settlement.id}
                           className="flex-1 sm:flex-none"
                         >
@@ -376,7 +428,7 @@ export default function SettlementsPage() {
                           </div>
                         </div>
                         <Button
-                          onClick={() => handleDirectSettlement(settlement.userId, settlement.netAmount)}
+                          onClick={() => handleDirectSettlement(settlement.userId, settlement.netAmount, settlement.userName)}
                           disabled={processingId === settlement.userId}
                           className="flex items-center justify-center space-x-2 w-full sm:w-auto"
                         >
@@ -444,7 +496,7 @@ export default function SettlementsPage() {
                           </div>
                         </div>
                         <Button
-                          onClick={() => handleSettlementRequest(settlement.userId, Math.abs(settlement.netAmount))}
+                          onClick={() => handleSettlementRequest(settlement.userId, Math.abs(settlement.netAmount), settlement.userName)}
                           disabled={processingId === settlement.userId}
                           variant="outline"
                           className="flex items-center justify-center space-x-2 w-full sm:w-auto"

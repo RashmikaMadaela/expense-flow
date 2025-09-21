@@ -33,9 +33,6 @@ model User {
   sentSettlementRequests     SettlementRequest[] @relation("SettlementRequestSender")
   receivedSettlementRequests SettlementRequest[] @relation("SettlementRequestReceiver")
   
-  // Group relationships
-  groupMemberships GroupMember[]
-  
   // Authentication (NextAuth.js required)
   accounts Account[]
   sessions Session[]
@@ -61,16 +58,11 @@ model Expense {
   participants  ExpenseParticipant[]
   settlements   Settlement[]
   
-  // Optional group assignment
-  groupId String?
-  group   Group?  @relation(fields: [groupId], references: [id])
-  
   // Metadata
   receiptUrl String? // URL to uploaded receipt image
   notes      String?
   
   @@index([createdBy])
-  @@index([groupId])
   @@index([createdAt])
   @@map("expenses")
 }
@@ -125,38 +117,6 @@ model Settlement {
   @@index([payerId])
   @@index([status])
   @@map("settlements")
-}
-
-// Groups for organizing expenses
-model Group {
-  id          String   @id @default(cuid())
-  name        String
-  description String?
-  currency    String   @default("USD")
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-  
-  // Relationships
-  members  GroupMember[]
-  expenses Expense[]
-  
-  @@map("groups")
-}
-
-// Group membership
-model GroupMember {
-  id       String @id @default(cuid())
-  role     GroupRole @default(MEMBER)
-  joinedAt DateTime  @default(now())
-  
-  // Relationships
-  groupId String
-  group   Group  @relation(fields: [groupId], references: [id], onDelete: Cascade)
-  userId  String
-  user    User   @relation(fields: [userId], references: [id])
-  
-  @@unique([groupId, userId])
-  @@map("group_members")
 }
 
 // Friend requests and relationships
@@ -214,11 +174,6 @@ enum SettlementRequestStatus {
   PENDING
   ACCEPTED
   REJECTED
-}
-
-enum GroupRole {
-  ADMIN
-  MEMBER
 }
 
 enum FriendRequestStatus {

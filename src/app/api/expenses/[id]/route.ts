@@ -44,9 +44,6 @@ export async function GET(
             },
           },
         },
-        group: {
-          select: { id: true, name: true },
-        },
         settlements: {
           include: {
             payer: {
@@ -173,9 +170,6 @@ export async function PUT(
                 select: { id: true, name: true, email: true, image: true },
               },
             },
-          },
-          group: {
-            select: { id: true, name: true },
           },
         },
       });

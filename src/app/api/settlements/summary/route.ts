@@ -216,23 +216,26 @@ export async function GET() {
         const payerId = settlementParticipant.userId;
         console.log(`Settlement Debug - Processing settlement: ${settlementParticipant.user?.name} paid ${settlementAmount}`);
         
-        // If current user is the receiver (expense was created by someone else for our benefit)
-        // This means someone paid us, so we need to reduce what they owe us
-        if (settlementExpense.createdBy === payerId && settlementMap.has(payerId)) {
-          const settlement = settlementMap.get(payerId)!;
-          const oldAmount = settlement.amountOwedToMe;
-          settlement.amountOwedToMe = Math.max(0, settlement.amountOwedToMe - settlementAmount);
-          console.log(`Settlement Debug - Reducing ${settlementParticipant.user?.name} owes me from ${oldAmount} to ${settlement.amountOwedToMe} (reduced by ${settlementAmount})`);
+        // For negative settlement amounts (settlement received), reduce what the payer owes to current user
+        if (settlementExpense.amount < 0 && settlementExpense.createdBy === userId) {
+          // This is a negative expense for current user, meaning they received payment
+          // Find the payer in our settlement map and reduce what they owe us
+          if (settlementMap.has(payerId)) {
+            const settlement = settlementMap.get(payerId)!;
+            const oldAmount = settlement.amountOwedToMe;
+            settlement.amountOwedToMe = Math.max(0, settlement.amountOwedToMe - settlementAmount);
+            console.log(`Settlement Debug - Reducing ${settlementParticipant.user?.name} owes me from ${oldAmount} to ${settlement.amountOwedToMe} (reduced by ${settlementAmount})`);
+          }
         }
         
-        // If current user is the payer (we created this settlement expense)
-        // This means we paid someone, so we need to reduce what we owe them
-        if (settlementExpense.createdBy === userId) {
-          // Find who we paid by parsing the description "Settled to [Name]"
-          const settledToMatch = settlementExpense.description.match(/Settled to (.+)$/);
+        // For positive settlement amounts (settlement paid), reduce what current user owes to the receiver
+        if (settlementExpense.amount > 0 && settlementExpense.createdBy === payerId) {
+          // This is a positive expense for the payer, meaning they paid someone
+          // Extract receiver name from description pattern "Settlement paid to [Name]"
+          const settledToMatch = settlementExpense.description.match(/Settlement paid to (.+)$/);
           if (settledToMatch) {
             const receiverName = settledToMatch[1];
-            // Find the receiver in our settlement map
+            // Find the receiver in our settlement map and reduce what we owe them
             for (const settlement of settlementMap.values()) {
               if (settlement.userName === receiverName) {
                 const oldAmount = settlement.amountIOwe;

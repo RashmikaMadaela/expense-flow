@@ -4,13 +4,14 @@ import { useSession } from 'next-auth/react';
 import { useState, useEffect } from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Users, Receipt, TrendingUp, LogOut, DollarSign } from 'lucide-react';
+import { Receipt, TrendingUp, LogOut, DollarSign } from 'lucide-react';
 import { signOut } from 'next-auth/react';
 import AddExpense from '@/components/AddExpense';
 import ExpenseList from '@/components/ExpenseList';
 import Reports from '@/components/Reports';
 
 interface DashboardStats {
+  totalAmount: number;
   totalExpenses: number;
   monthlyExpenses: number;
   expenseCount: number;
@@ -19,8 +20,9 @@ interface DashboardStats {
 
 export default function Dashboard() {
   const { data: session } = useSession();
-  const [currentView, setCurrentView] = useState<'dashboard' | 'reports' | 'groups'>('dashboard');
+  const [currentView, setCurrentView] = useState<'dashboard' | 'reports'>('dashboard');
   const [stats, setStats] = useState<DashboardStats>({
+    totalAmount: 0,
     totalExpenses: 0,
     monthlyExpenses: 0,
     expenseCount: 0,
@@ -35,6 +37,7 @@ export default function Dashboard() {
         const result = await response.json();
         const data = result.data || result; // Handle both wrapped and unwrapped responses
         setStats({
+          totalAmount: data.totalAmount || 0,
           totalExpenses: data.totalExpenses || 0,
           monthlyExpenses: data.monthlyExpenses || 0,
           expenseCount: data.expenseCount || 0,
@@ -88,25 +91,6 @@ export default function Dashboard() {
     return <Reports onClose={() => setCurrentView('dashboard')} />;
   }
 
-  if (currentView === 'groups') {
-    // TODO: Implement Groups component
-    return (
-      <div className="min-h-screen bg-gray-50 p-6">
-        <div className="max-w-7xl mx-auto">
-          <div className="flex items-center gap-4 mb-8">
-            <Button variant="outline" onClick={() => setCurrentView('dashboard')}>
-              Back to Dashboard
-            </Button>
-            <h1 className="text-3xl font-bold text-gray-900">Groups</h1>
-          </div>
-          <Card className="p-8 text-center">
-            <p className="text-lg text-gray-600">Groups functionality coming soon!</p>
-          </Card>
-        </div>
-      </div>
-    );
-  }
-
   return (
     <div className="min-h-screen bg-gray-50/50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-6 lg:py-8">
@@ -137,7 +121,7 @@ export default function Dashboard() {
               <div className="min-w-0 flex-1">
                 <p className="text-sm font-medium text-gray-600 truncate">Total Expenses</p>
                 <p className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-900 truncate">
-                  {formatAmount(stats.totalExpenses)}
+                  {formatAmount(stats.totalAmount)}
                 </p>
               </div>
               <div className="p-3 bg-blue-100 rounded-full flex-shrink-0 ml-4">
@@ -175,11 +159,11 @@ export default function Dashboard() {
           <Card className="p-4 sm:p-6 hover:shadow-md transition-shadow">
             <div className="flex items-center justify-between">
               <div className="min-w-0 flex-1">
-                <p className="text-sm font-medium text-gray-600 truncate">Shared Groups</p>
+                <p className="text-sm font-medium text-gray-600 truncate">Friends</p>
                 <p className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-900">0</p>
               </div>
               <div className="p-3 bg-orange-100 rounded-full flex-shrink-0 ml-4">
-                <Users className="h-5 w-5 sm:h-6 sm:w-6 text-orange-600" />
+                <Receipt className="h-5 w-5 sm:h-6 sm:w-6 text-orange-600" />
               </div>
             </div>
           </Card>
@@ -230,15 +214,6 @@ export default function Dashboard() {
             <Card className="p-4 sm:p-6 shadow-md">
               <h2 className="text-xl font-semibold mb-4">Quick Actions</h2>
               <div className="space-y-3">
-                <Button 
-                  variant="outline" 
-                  className="w-full justify-start hover:bg-blue-50 hover:border-blue-200 hover:text-blue-700 transition-colors" 
-                  size="lg"
-                  onClick={() => setCurrentView('groups')}
-                >
-                  <Users className="h-5 w-5 mr-3" />
-                  Create Group
-                </Button>
                 <Button 
                   variant="outline" 
                   className="w-full justify-start hover:bg-purple-50 hover:border-purple-200 hover:text-purple-700 transition-colors" 

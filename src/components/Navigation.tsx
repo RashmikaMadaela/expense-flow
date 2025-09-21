@@ -8,7 +8,6 @@ import Image from 'next/image';
 import { Button } from '@/components/ui/button';
 import { 
   Home, 
-  Users, 
   UserPlus, 
   Settings, 
   BarChart3, 
@@ -22,7 +21,6 @@ import {
 
 const navigationItems = [
   { name: 'Dashboard', href: '/dashboard', icon: Home },
-  { name: 'Groups', href: '/groups', icon: Users },
   { name: 'Friends', href: '/friends', icon: UserPlus },
   { name: 'Settlements', href: '/settlements', icon: CreditCard },
   { name: 'Reports', href: '/reports', icon: BarChart3 },

@@ -10,6 +10,7 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { UserPlus, Search, Check, X, User, UserCheck, Clock } from 'lucide-react';
+import { useToast } from '@/hooks/use-toast';
 
 interface User {
   id: string;
@@ -37,6 +38,7 @@ interface SearchResult {
 
 export default function FriendsPage() {
   const { data: session } = useSession();
+  const { toast } = useToast();
   const [friends, setFriends] = useState<User[]>([]);
   const [friendRequests, setFriendRequests] = useState<FriendRequest[]>([]);
   const [searchResults, setSearchResults] = useState<SearchResult[]>([]);
@@ -44,6 +46,8 @@ export default function FriendsPage() {
   const [searchQuery, setSearchQuery] = useState('');
   const [showAddDialog, setShowAddDialog] = useState(false);
   const [searchLoading, setSearchLoading] = useState(false);
+  const [sendingRequest, setSendingRequest] = useState<string | null>(null);
+  const [respondingToRequest, setRespondingToRequest] = useState<string | null>(null);
 
   useEffect(() => {
     fetchFriends();
@@ -103,6 +107,7 @@ export default function FriendsPage() {
   };
 
   const sendFriendRequest = async (userId: string) => {
+    setSendingRequest(userId);
     try {
       const response = await fetch('/api/friends/requests', {
         method: 'POST',
@@ -122,18 +127,34 @@ export default function FriendsPage() {
           )
         );
         // Refresh friend requests
-        fetchFriendRequests();
+        await fetchFriendRequests();
+        
+        toast({
+          title: "Friend request sent!",
+          description: "Your friend request has been sent successfully.",
+        });
       } else {
         const error = await response.json();
-        alert(error.message || 'Failed to send friend request');
+        toast({
+          title: "Failed to send friend request",
+          description: error.message || "Something went wrong. Please try again.",
+          variant: "destructive",
+        });
       }
     } catch (error) {
       console.error('Error sending friend request:', error);
-      alert('Failed to send friend request');
+      toast({
+        title: "Failed to send friend request",
+        description: "Something went wrong. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setSendingRequest(null);
     }
   };
 
   const respondToFriendRequest = async (requestId: string, accept: boolean) => {
+    setRespondingToRequest(requestId);
     try {
       const response = await fetch(`/api/friends/requests/${requestId}`, {
         method: 'PUT',
@@ -145,15 +166,33 @@ export default function FriendsPage() {
 
       if (response.ok) {
         // Refresh both friends and friend requests
-        fetchFriends();
-        fetchFriendRequests();
+        await fetchFriends();
+        await fetchFriendRequests();
+        
+        toast({
+          title: accept ? "Friend request accepted!" : "Friend request declined",
+          description: accept 
+            ? "You are now friends and can start splitting expenses together." 
+            : "The friend request has been declined.",
+          variant: accept ? "default" : "destructive",
+        });
       } else {
         const error = await response.json();
-        alert(error.message || 'Failed to respond to friend request');
+        toast({
+          title: "Failed to respond to friend request",
+          description: error.message || "Something went wrong. Please try again.",
+          variant: "destructive",
+        });
       }
     } catch (error) {
       console.error('Error responding to friend request:', error);
-      alert('Failed to respond to friend request');
+      toast({
+        title: "Failed to respond to friend request",
+        description: "Something went wrong. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setRespondingToRequest(null);
     }
   };
 
@@ -263,8 +302,12 @@ export default function FriendsPage() {
                           <Button 
                             size="sm"
                             onClick={() => sendFriendRequest(user.id)}
+                            disabled={sendingRequest === user.id}
                           >
                             <UserPlus className="h-4 w-4" />
+                            {sendingRequest === user.id && (
+                              <div className="ml-2 animate-spin rounded-full h-3 w-3 border-b-2 border-white"></div>
+                            )}
                           </Button>
                         )}
                       </div>
@@ -390,14 +433,19 @@ export default function FriendsPage() {
                         <Button 
                           size="sm"
                           onClick={() => respondToFriendRequest(request.id, true)}
+                          disabled={respondingToRequest === request.id}
                         >
                           <Check className="h-4 w-4 mr-1" />
                           Accept
+                          {respondingToRequest === request.id && (
+                            <div className="ml-2 animate-spin rounded-full h-3 w-3 border-b-2 border-white"></div>
+                          )}
                         </Button>
                         <Button 
                           variant="outline" 
                           size="sm"
                           onClick={() => respondToFriendRequest(request.id, false)}
+                          disabled={respondingToRequest === request.id}
                         >
                           <X className="h-4 w-4 mr-1" />
                           Decline

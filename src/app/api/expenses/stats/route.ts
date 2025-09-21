@@ -36,36 +36,40 @@ export async function GET() {
     });
     
     // Calculate total expenses (in cents, convert to dollars)
+    // Include all expenses, both positive (expenses) and negative (settlement income)
+    const totalAmount = expenses.reduce((sum, expense) => sum + expense.amount, 0) / 100;
+    
     // Separate positive and negative amounts for clearer reporting
     const positiveExpenses = expenses.filter(e => e.amount > 0);
     const negativeExpenses = expenses.filter(e => e.amount < 0);
     
     // Calculate different totals
-    const totalExpenses = positiveExpenses.reduce((sum, expense) => sum + expense.amount, 0) / 100; // Only actual expenses
+    const totalExpenses = positiveExpenses.reduce((sum, expense) => sum + expense.amount, 0) / 100; // Actual expenses
     const totalIncome = Math.abs(negativeExpenses.reduce((sum, expense) => sum + expense.amount, 0)) / 100; // Settlement income
     
-    // Calculate monthly expenses
-    const monthlyExpenses = positiveExpenses
+    // Calculate monthly expenses (including settlements)
+    const monthlyExpenses = expenses
       .filter(expense => expense.createdAt >= startOfMonth)
       .reduce((sum, expense) => sum + expense.amount, 0) / 100;
     
-    // Get expense count (only actual expenses, not settlements)
-    const expenseCount = positiveExpenses.length;
+    // Get total expense count (including settlements)
+    const expenseCount = expenses.length;
     
-    // Group expenses by category (only positive amounts for expense tracking)
-    const categories = positiveExpenses.reduce((acc, expense) => {
+    // Group expenses by category (including both positive and negative amounts)
+    const categories = expenses.reduce((acc, expense) => {
       const category = expense.category || 'other';
       acc[category] = (acc[category] || 0) + (expense.amount / 100);
       return acc;
     }, {} as Record<string, number>);
     
     const stats = {
-      totalExpenses, // Only actual expenses
-      totalIncome,   // Settlement income received
+      totalAmount,     // Total including settlements (net spending)
+      totalExpenses,   // Only actual expenses
+      totalIncome,     // Settlement income received
       netSpending: totalExpenses - totalIncome, // Net amount spent
-      monthlyExpenses,
-      expenseCount,
-      categories,
+      monthlyExpenses, // Monthly total including settlements
+      expenseCount,    // Total count including settlements
+      categories,      // All categories including settlements
     };
 
     return createApiResponse(stats, 'Expense statistics retrieved successfully');

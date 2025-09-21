@@ -35,7 +35,7 @@ export default function LandingPage() {
             Track Expenses with <span className="text-indigo-600 dark:text-indigo-400">Friends</span>
           </h1>
           <p className="text-xl text-slate-700 dark:text-slate-300 mb-8 max-w-2xl mx-auto leading-relaxed">
-            Split bills, track group expenses, and settle up with friends easily. 
+            Split bills, track expenses, and settle up with friends easily. 
             No more awkward money conversations or forgotten debts.
           </p>
           <Button 
@@ -64,11 +64,11 @@ export default function LandingPage() {
           <Card className="text-center bg-white/80 dark:bg-slate-800/80 backdrop-blur-sm border-slate-200 dark:border-slate-700 shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105">
             <CardHeader>
               <Users className="h-12 w-12 text-emerald-600 dark:text-emerald-400 mx-auto mb-4" />
-              <CardTitle className="text-slate-900 dark:text-slate-100">Group Management</CardTitle>
+              <CardTitle className="text-slate-900 dark:text-slate-100">Friend Management</CardTitle>
             </CardHeader>
             <CardContent>
               <CardDescription className="text-slate-600 dark:text-slate-400">
-                Create groups for trips, roommates, or regular activities
+                Add friends and manage shared expenses easily
               </CardDescription>
             </CardContent>
           </Card>
@@ -101,7 +101,7 @@ export default function LandingPage() {
         {/* CTA Section */}
         <div className="text-center bg-white/90 dark:bg-slate-800/90 backdrop-blur-sm rounded-2xl p-12 shadow-xl border border-slate-200 dark:border-slate-700">
           <h2 className="text-3xl font-bold text-slate-900 dark:text-slate-100 mb-4">
-            Ready to simplify your group expenses?
+            Ready to simplify your expense tracking?
           </h2>
           <p className="text-slate-700 dark:text-slate-300 mb-8 text-lg">
             Join thousands of users who have streamlined their expense sharing

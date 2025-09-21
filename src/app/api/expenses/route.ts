@@ -46,7 +46,6 @@ async function handleCreateExpense(request: NextRequest) {
           category: expenseData.category || 'Other',
           notes: expenseData.notes,
           createdBy: userId,
-          groupId: expenseData.groupId,
         },
       });
 
@@ -130,9 +129,6 @@ async function handleCreateExpense(request: NextRequest) {
               },
             },
           },
-          group: {
-            select: { id: true, name: true },
-          },
         },
       });
     });
@@ -176,7 +172,7 @@ async function handleGetExpenses(request: NextRequest) {
       );
     }
     
-    const { groupId, limit, offset, startDate, endDate } = validationResult.data;
+    const { limit, offset, startDate, endDate } = validationResult.data;
     
     // Build where clause
     const whereClause = {
@@ -185,7 +181,6 @@ async function handleGetExpenses(request: NextRequest) {
         { createdBy: userId },
         { participants: { some: { userId } } },
       ],
-      ...(groupId && { groupId }),
       ...(startDate || endDate) && {
         date: {
           ...(startDate && { gte: new Date(startDate) }),
@@ -207,9 +202,6 @@ async function handleGetExpenses(request: NextRequest) {
                 select: { id: true, name: true, email: true, image: true },
               },
             },
-          },
-          group: {
-            select: { id: true, name: true },
           },
         },
         orderBy: { date: 'desc' },
